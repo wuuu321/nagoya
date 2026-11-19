@@ -3391,13 +3391,15 @@
       });
 
       // 將自訂新增的行程卡片一併寫入匯出的 ITINERARY_DATA，確保下載新版後永久保留
-      const customEvMap = JSON.parse(localStorage.getItem(CUSTOM_EVENTS_STORAGE_KEY) || '{}');
+      const localEvMap = JSON.parse(localStorage.getItem(CUSTOM_EVENTS_STORAGE_KEY) || '{}');
+      const baseBaked = (typeof BAKED_CUSTOM_EVENTS !== 'undefined') ? BAKED_CUSTOM_EVENTS : {};
+      const mergedEvMap = { ...baseBaked, ...localEvMap };
       let finalHtml = '<!DOCTYPE html>\n' + clonedDoc.outerHTML;
-      if (Object.keys(customEvMap).length > 0) {
+      finalHtml = finalHtml.replace(/\n?\s*const BAKED_CUSTOM_EVENTS = .*?;\n?/g, '\n');
+      if (Object.keys(mergedEvMap).length > 0) {
         finalHtml = finalHtml.replace(
-          'window.addEventListener(\'DOMContentLoaded\', () => {',
-          `const BAKED_CUSTOM_EVENTS = ${JSON.stringify(customEvMap)};\n    const BAKED_CUSTOM_EVENTS = {"d3":[{"_uid":"cust-1795074392196","insertIndex":1,"time":"12:00 - 14:00","icon":"fa-road","badgeColor":"bg-mutedBrown","title":"中途停靠 · 蛭野高原服務區（上行）","desc":"往名古屋／犬山方向（上り）休息站，可休息、上廁所。","nav":"蛭野高原服務區（上行）","alert":""}]};
-    window.addEventListener('DOMContentLoaded', () => {`
+          '/* 初始化啟動 */\n    ===================================================================== */\n    window.addEventListener(\'DOMContentLoaded\', () => {',
+          `/* 初始化啟動 */\n    ===================================================================== */\n    const BAKED_CUSTOM_EVENTS = ${JSON.stringify(mergedEvMap)};\n    window.addEventListener('DOMContentLoaded', () => {`
         );
       }
       const blob = new Blob([finalHtml], { type: 'text/html;charset=utf-8' });
@@ -4588,6 +4590,7 @@ d3: {
     /* =====================================================================
        初始化啟動
     ===================================================================== */
+    const BAKED_CUSTOM_EVENTS = {"d3":[{"_uid":"cust-1795074392196","insertIndex":1,"time":"12:00 - 14:00","icon":"fa-road","badgeColor":"bg-mutedBrown","title":"中途停靠 · 蛭野高原服務區（上行）","desc":"往名古屋／犬山方向（上り）休息站，可休息、上廁所。","nav":"蛭野高原服務區（上行）","alert":""}]};
     window.addEventListener('DOMContentLoaded', () => {
       renderDailyItineraries();
       initEditableTargets();
